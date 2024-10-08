@@ -12,7 +12,7 @@ jobs:
     - uses: actions/checkout@v4
 
     - name: Set up Python 3.10
-      uses: actions/setup-python@v4  # Update to the latest version to avoid the Node.js deprecation warning
+      uses: actions/setup-python@v4  # Update to the latest version to avoid Node.js deprecation warning
       with:
         python-version: '3.10'
 
@@ -25,11 +25,18 @@ jobs:
     - name: Create or Update Conda Environment
       run: |
         conda env update --file environment.yml --name base
-        source $CONDA_PREFIX/etc/profile.d/conda.sh  # Ensure conda command is recognized
-        conda activate base  # Activate environment for the next steps
+        source $CONDA_PREFIX/etc/profile.d/conda.sh  # Ensure conda is properly initialized
+        conda activate base  # Activate environment for subsequent steps
 
     - name: Lint with flake8
       run: |
-        conda install -y flake8  # Ensure flake8 is installed
-        # Stop the build if there are syntax errors or undefined names
-        flake8 . --count --select=E9,F63,F7
+        conda install -y flake8  # Install flake8
+        # Check for syntax errors and undefined names
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        # Treat all other errors as warnings
+        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+    - name: Test with pytest
+      run: |
+        conda install -y pytest  # Install pytest
+        pytest
